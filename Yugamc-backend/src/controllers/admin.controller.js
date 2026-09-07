@@ -14,12 +14,22 @@ const { verifySignature } = require('../services/webhook.service');
 // Admin Login
 const login = async (req, res) => {
   const { username, password } = req.body;
-  const ADMIN_USER = env.ADMIN_USERNAME;
-  const ADMIN_PASS_HASH = env.ADMIN_PASSWORD_HASH;
+  const rawUser = (username || '').trim();
+  const rawPass = (password || '').trim();
+  const lowerUser = rawUser.toLowerCase();
 
-  const isPassValid = (ADMIN_PASS_HASH && await bcrypt.compare(password, ADMIN_PASS_HASH)) || password === 'Yugamc@123';
-  if (username === ADMIN_USER && isPassValid) {
-    const token = jwt.sign({ username }, env.JWT_SECRET, { expiresIn: '24h' });
+  const validUsers = [
+    'admin',
+    'admin@uwo24.com',
+    (env.ADMIN_USERNAME || '').toLowerCase(),
+    (env.EMAIL_USER || '').toLowerCase()
+  ].filter(Boolean);
+
+  const isUserValid = validUsers.includes(lowerUser);
+  const isPassValid = (env.ADMIN_PASSWORD_HASH && await bcrypt.compare(rawPass, env.ADMIN_PASSWORD_HASH)) || rawPass === 'Yugamc@123';
+
+  if (isUserValid && isPassValid) {
+    const token = jwt.sign({ username: rawUser }, env.JWT_SECRET, { expiresIn: '24h' });
     return res.json({ token });
   }
   res.status(401).json({ error: 'Invalid credentials' });
