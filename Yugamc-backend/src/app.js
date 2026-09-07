@@ -11,6 +11,9 @@ const fs = require('fs');
 
 const app = express();
 
+// Trust reverse proxy (Cloud Run / Load Balancer) so client IPs are accurate
+app.set('trust proxy', 1);
+
 // Security HTTP headers (CSP disabled so SPA assets, fonts, and inline styles load correctly)
 app.use(helmet({
   contentSecurityPolicy: false,
