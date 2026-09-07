@@ -15,12 +15,27 @@ app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin) || env.ALLOWED_ORIGINS.includes(origin)) {
+    // Allow localhost and 127.0.0.1
+    if (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('Blocked by CORS'));
+    // Allow Google Cloud Run domains (*.run.app)
+    if (/^https:\/\/([a-zA-Z0-9-]+)\.run\.app$/.test(origin) || origin.endsWith('.run.app')) {
+      return callback(null, true);
+    }
+    // Allow production domains
+    if (/^https:\/\/([a-zA-Z0-9-]+\.)?uwo24\.com$/.test(origin) || /^https:\/\/([a-zA-Z0-9-]+\.)?yugamc\.com$/.test(origin)) {
+      return callback(null, true);
+    }
+    // Allow origins configured via ALLOWED_ORIGINS env
+    if (env.ALLOWED_ORIGINS && env.ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
 }));
 
 // Body parser, reading data from body into req.body, with a size limit
