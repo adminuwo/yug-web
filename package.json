@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "install:all": "npm install --prefix Yugamc-backend && npm install --prefix Yugamc-frontend",
+    "build": "npm run build --prefix Yugamc-frontend",
     "start": "concurrently \"npm run start --prefix Yugamc-backend\" \"npm run dev --prefix Yugamc-frontend\"",
     "dev": "concurrently \"npm run dev --prefix Yugamc-backend\" \"npm run dev --prefix Yugamc-frontend\""
   },
