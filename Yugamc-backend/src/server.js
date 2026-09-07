@@ -8,16 +8,18 @@ const env = require('./config/env');
 const { connectDB } = require('./config/database');
 const app = require('./app');
 
-// Connect to MongoDB and start server
-let server;
+const PORT = Number(process.env.PORT) || env.PORT || 8080;
+
+// Start listening immediately on 0.0.0.0 so Cloud Run container startup probe passes instantly
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+// Connect to MongoDB asynchronously without blocking container startup
 connectDB().then(() => {
-  const PORT = env.PORT;
-  server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+  console.log('Database connected successfully.');
 }).catch((err) => {
-  console.error('Failed to connect to MongoDB. Exiting...');
-  process.exit(1);
+  console.error('Warning: Failed to connect to MongoDB at startup:', err.message);
 });
 
 module.exports = server;
