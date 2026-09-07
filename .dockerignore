@@ -5,4 +5,4 @@ dist
 .git
 .env
 .env.local
-Yugamc-backend
+.DS_Store

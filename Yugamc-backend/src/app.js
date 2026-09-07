@@ -6,10 +6,16 @@ const env = require('./config/env');
 const { globalLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
 
+const path = require('path');
+const fs = require('fs');
+
 const app = express();
 
-// Security HTTP headers
-app.use(helmet());
+// Security HTTP headers (CSP disabled so SPA assets, fonts, and inline styles load correctly)
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 
 // Restrict CORS
 app.use(cors({
@@ -45,10 +51,29 @@ app.use(express.json({ limit: '50kb' }));
 app.use('/api', globalLimiter);
 
 // Health Check Route
-app.get('/', (req, res) => res.send('YUG AMC Backend is Live!'));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'YUG AMC Backend is Live!' }));
 
 // Register Modular Routes
 app.use(routes);
+
+// Serve Frontend Static Files
+const publicFrontendDocker = path.resolve(__dirname, '../public-frontend');
+const publicFrontendLocal = path.resolve(__dirname, '../../Yugamc-frontend/dist');
+const frontendPath = fs.existsSync(publicFrontendDocker) ? publicFrontendDocker : publicFrontendLocal;
+
+if (fs.existsSync(frontendPath)) {
+  app.use(express.static(frontendPath));
+  
+  // SPA fallback for all non-API GET routes (Express 5 compatible)
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      return res.sendFile(path.join(frontendPath, 'index.html'));
+    }
+    next();
+  });
+} else {
+  app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'YUG AMC Backend is Live! (Frontend dist not found)' }));
+}
 
 // Centralized Error Handling Middleware
 app.use(errorHandler);
