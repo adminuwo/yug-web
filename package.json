@@ -1,0 +1,14 @@
+{
+  "name": "yugamc-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo for Yugamc frontend and backend",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "npm install --prefix Yugamc-backend && npm install --prefix Yugamc-frontend",
+    "start": "concurrently \"npm run start --prefix Yugamc-backend\" \"npm run dev --prefix Yugamc-frontend\"",
+    "dev": "concurrently \"npm run dev --prefix Yugamc-backend\" \"npm run dev --prefix Yugamc-frontend\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
