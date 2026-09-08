@@ -40,3 +40,15 @@ test('Smoke Test - Services Importability', () => {
   assert.ok(storageService.uploadFile);
   assert.ok(parserService.extractText);
 });
+
+test('Smoke Test - Health Controller & Routes', () => {
+  const healthController = require('../controllers/health.controller');
+  const healthRoutes = require('../routes/health.routes');
+
+  assert.strictEqual(typeof healthController.getHealth, 'function');
+  assert.strictEqual(typeof healthController.getLiveness, 'function');
+  assert.strictEqual(typeof healthController.getReadiness, 'function');
+  assert.strictEqual(typeof healthController.getDetailedHealth, 'function');
+  assert.ok(healthRoutes);
+});
+

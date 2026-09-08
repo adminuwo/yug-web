@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const routes = require('./routes');
+const healthRoutes = require('./routes/health.routes');
 const env = require('./config/env');
 const { globalLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
@@ -50,11 +51,11 @@ app.use(cors({
 // Body parser, reading data from body into req.body, with a size limit
 app.use(express.json({ limit: '50kb' }));
 
+// Health Check Routes (Mounted before rate limiter so probes & monitors aren't throttled)
+app.use(healthRoutes);
+
 // Apply global rate limiting
 app.use('/api', globalLimiter);
-
-// Health Check Route
-app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'YUG AMC Backend is Live!' }));
 
 // Register Modular Routes
 app.use(routes);
@@ -67,15 +68,13 @@ const frontendPath = fs.existsSync(publicFrontendDocker) ? publicFrontendDocker 
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
   
-  // SPA fallback for all non-API GET routes (Express 5 compatible)
+  // SPA fallback for all non-API and non-health GET routes (Express 5 compatible)
   app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/health')) {
       return res.sendFile(path.join(frontendPath, 'index.html'));
     }
     next();
   });
-} else {
-  app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'YUG AMC Backend is Live! (Frontend dist not found)' }));
 }
 
 // Centralized Error Handling Middleware
